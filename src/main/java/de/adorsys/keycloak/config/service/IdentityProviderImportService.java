@@ -131,10 +131,8 @@ public class IdentityProviderImportService {
 
     private void createOrUpdateOrDeleteIdentityProviderMappers(RealmImport realmImport) {
         String realmName = realmImport.getRealm();
-        List<IdentityProviderMapperRepresentation> identityProviderMappers = realmImport.getIdentityProviderMappers();
+        List<IdentityProviderMapperRepresentation> identityProviderMappers = Optional.ofNullable(realmImport.getIdentityProviderMappers()).orElse(List.of());
         List<IdentityProviderMapperRepresentation> existingIdentityProviderMappers = identityProviderMapperRepository.getAll(realmName);
-
-        if (identityProviderMappers == null) return;
 
         if (importConfigProperties.getManaged().getIdentityProviderMapper() == ImportManagedPropertiesValues.FULL) {
             deleteIdentityProviderMappersMissingInImport(realmName, identityProviderMappers, existingIdentityProviderMappers);
@@ -156,7 +154,7 @@ public class IdentityProviderImportService {
         if (maybeIdentityProviderMapper.isPresent()) {
             updateIdentityProviderMapperIfNecessary(realmName, identityProviderMapper);
         } else {
-            logger.debug("Create identityProviderMapper '{}' in realm '{}'", identityProviderMapperName, realmName);
+            logger.debug("Mapper '{}' not found, creating new one in realm '{}'", identityProviderMapperName, realmName);
             identityProviderMapperRepository.create(realmName, identityProviderMapper);
         }
     }
@@ -191,7 +189,6 @@ public class IdentityProviderImportService {
         return CloneUtil.deepEquals(existingIdentityProviderMapper, patchedIdentityProviderMapper);
     }
 
-
     private void deleteIdentityProviderMappersMissingInImport(
             String realmName,
             List<IdentityProviderMapperRepresentation> identityProviderMappers,
@@ -215,5 +212,4 @@ public class IdentityProviderImportService {
                                 && Objects.equals(mapper.getIdentityProviderAlias(), identityProviderMapper.getIdentityProviderAlias())
                 );
     }
-
 }

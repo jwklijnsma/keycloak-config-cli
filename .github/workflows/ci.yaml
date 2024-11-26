@@ -44,7 +44,7 @@ jobs:
             KEYCLOAK_CLIENT_VERSION: 24.0.5
           - KEYCLOAK_VERSION: 25.0.1
             KEYCLOAK_CLIENT_VERSION: 25.0.1
-          - KEYCLOAK_VERSION: 26.0.4
+          - KEYCLOAK_VERSION: 26.0.5
             KEYCLOAK_CLIENT_VERSION: 26.0.2
     steps:
       - uses: actions/checkout@v4.2.1
@@ -88,7 +88,7 @@ jobs:
         run: ./mvnw ${MAVEN_CLI_OPTS} -Dkeycloak.version=${{ matrix.env.KEYCLOAK_VERSION }} -Dkeycloak.client.version=${{ matrix.env.KEYCLOAK_CLIENT_VERSION }} ${ADJUSTED_RESTEASY_VERSION} clean verify -Pcoverage ${COMPATIBILITY_PROFILE}
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4.6.0
+        uses: codecov/codecov-action@v5.0.7
         if: github.ref == 'refs/heads/main'
         with:
           file: "${{ github.workspace }}/target/site/jacoco/jacoco.xml"
@@ -125,7 +125,7 @@ jobs:
 
       - name: Set up Docker Build Metadata
         id: docker_meta
-        uses: docker/metadata-action@v5.5.1
+        uses: docker/metadata-action@v5.6.1
         with:
           images: adorsys/keycloak-config-cli,quay.io/adorsys/keycloak-config-cli
           flavor: |
@@ -275,7 +275,7 @@ jobs:
         with:
           version: v3.4.0
 
-      - uses: actions/setup-python@v5.2.0
+      - uses: actions/setup-python@v5.3.0
         with:
           python-version: 3.7
 
@@ -308,7 +308,7 @@ jobs:
           echo Tag: $Tag
           echo "::set-output name=tag::$TAG"
       - name: Create Release
-        uses: softprops/action-gh-release@v2.0.8
+        uses: softprops/action-gh-release@v2.1.0
         with:
           name: Release ${{ github.ref_name }}
           draft: false

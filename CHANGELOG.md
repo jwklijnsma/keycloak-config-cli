@@ -6,11 +6,56 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Fixed
+- Fix events expiration setting in realm.json is ignored during realm import [#1230](https://github.com/adorsys/keycloak-config-cli/issues/1230)
+- Fix 403 Forbidden errors in CI/CD for Keycloak 26.x [#1307](https://github.com/adorsys/keycloak-config-cli/issues/1307)
+
+## [6.4.0] - 2025-02-21
+### Added
+- Allow a user's username to be updated through the config [#810](https://github.com/adorsys/keycloak-config-cli/issues/810)
+
+## [6.3.0] - 2025-02-03
+### Added
+- Improve error logging for Keycloak responses  [1270](https://github.com/adorsys/keycloak-config-cli/issues/1270)
+
+### Fixed
+- Fix high level CVE (CVE-2024-38807)
+
+### Fixed
+- fix chart publish failure
+### Added
+- added migration guide for keycloak 25.0.1 [#1072](https://github.com/adorsys/keycloak-config-cli/issues/1072)
+
+
+### Fixed
+-  Fix Service Account User always triggers UPDATE USER event [#878](https://github.com/adorsys/keycloak-config-cli/issues/878)
+
+### Added
+- Publish charts with github pages [#941](https://github.com/adorsys/keycloak-config-cli/issues/941)
+- Support for Keycloak 26.1
+- Ignore unknown json properties from newer Keycloak versions  [#1265](https://github.com/adorsys/keycloak-config-cli/issues/1265)
+
+### Fixed
+-  Fix Initial Credentials Causes Update [819](https://github.com/adorsys/keycloak-config-cli/issues/819)
+
+
+## [6.2.1] - 2024-12-05
+### Fixed
+- Fix ci failure actions/upload-artifact@v4 new public artifacts are no longer accessible
+## [6.2.0] - 2024-12-03
+### Fix Fails to delete authentication flow when it's referenced as an IdP [#868](https://github.com/adorsys/keycloak-config-cli/issues/868)
+-
 ## Fixed
 - otpPolicyAlgorithm ignored during import [#847](https://github.com/adorsys/keycloak-config-cli/issues/847)
 
 ### Added
+
+- Added Navigation in the readme [#1187](https://github.com/adorsys/keycloak-config-cli/issues/1187)
+### Added
+- Improve documentation of managed resources, particularly user federations [#826](https://github.com/adorsys/keycloak-config-cli/issues/826)
+
 - Added Navigation in the readme [#1099](https://github.com/adorsys/keycloak-config-cli/issues/1099)
+
 ### Added
 - improved logging for realm retrieval errors [#1010](https://github.com/adorsys/keycloak-config-cli/issues/1010)
 ### Fixed
@@ -19,6 +64,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Fixed
 - Fix to manage Remote state import for clientscopes and scopeMappings [#1012](https://github.com/adorsys/keycloak-config-cli/issues/1012)
+
+### Fixed
+- Fixed to delete protocol mappers if not in the import[#746](https://github.com/orgs/adorsys/projects/5/views/1?pane=issue&itemId=80856370&issue=adorsys%7Ckeycloak-config-cli%7C746)
 
 ### Fixed
 - Allow environment variables from existing secrets [#822](https://github.com/adorsys/keycloak-config-cli/issues/822)
@@ -32,6 +80,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 - Allow executions of same provider with different configurations in Sub-Auth-Flows
 - Fix enabling a realm clears the value of eventsExpiration
+- Display names and icon URIs of authorization scopes are now imported alongside scope name
 
 ## [6.1.11] - 2024-10-14
 
@@ -826,7 +875,15 @@ A lot of import properties are added over the years. this major release of keycl
 
 <!-- @formatter:off -->
 
-[Unreleased]: https://github.com/adorsys/keycloak-config-cli/compare/v6.1.6...HEAD
+[Unreleased]: https://github.com/adorsys/keycloak-config-cli/compare/v6.4.0...HEAD
+[6.4.0]: https://github.com/adorsys/keycloak-config-cli/compare/v6.3.0...v6.4.0
+[6.3.0]: https://github.com/adorsys/keycloak-config-cli/compare/v6.2.1...v6.3.0
+[6.2.1]: https://github.com/adorsys/keycloak-config-cli/compare/v6.2.0...v6.2.1
+[6.2.0]: https://github.com/adorsys/keycloak-config-cli/compare/vFixed...v6.2.0
+[Fixed]: https://github.com/adorsys/keycloak-config-cli/compare/v6.1.11...vFixed
+[6.1.11]: https://github.com/adorsys/keycloak-config-cli/compare/v6.1.10...v6.1.11
+[6.1.10]: https://github.com/adorsys/keycloak-config-cli/compare/v6.1.7...v6.1.10
+[6.1.7]: https://github.com/adorsys/keycloak-config-cli/compare/v6.1.6...v6.1.7
 [6.1.6]: https://github.com/adorsys/keycloak-config-cli/compare/v6.1.5...v6.1.6
 [6.1.5]: https://github.com/adorsys/keycloak-config-cli/compare/v6.1.3...v6.1.5
 [6.1.3]: https://github.com/adorsys/keycloak-config-cli/compare/v6.1.2...v6.1.3

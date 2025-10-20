@@ -20,6 +20,8 @@
 
 package de.adorsys.keycloak.config.provider;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import de.adorsys.keycloak.config.exception.KeycloakProviderException;
 import de.adorsys.keycloak.config.properties.KeycloakConfigProperties;
 import de.adorsys.keycloak.config.util.ResteasyUtil;
@@ -28,11 +30,13 @@ import dev.failsafe.RetryPolicy;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 import org.jboss.resteasy.client.jaxrs.internal.BasicAuthentication;
+import org.jboss.resteasy.plugins.providers.jackson.ResteasyJackson2Provider;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -44,6 +48,7 @@ import java.util.function.Supplier;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.core.Form;
+import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 /**
@@ -51,6 +56,7 @@ import jakarta.ws.rs.core.Response;
  * to avoid a deadlock.
  */
 @Component
+@ConditionalOnProperty(prefix = "run", name = "operation", havingValue = "IMPORT", matchIfMissing = true)
 public class KeycloakProvider implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(KeycloakProvider.class);
 
@@ -76,6 +82,7 @@ public class KeycloakProvider implements AutoCloseable {
     public Keycloak getInstance() {
         if (keycloak == null || resteasyClient == null || keycloak.isClosed() || resteasyClient.isClosed()) {
             resteasyClient = resteasyClientSupplier.get();
+            resteasyClient.register(JacksonProvider.class);
             keycloak = createKeycloak();
 
             checkServerVersion();
@@ -232,5 +239,21 @@ public class KeycloakProvider implements AutoCloseable {
 
     public boolean isClosed() {
         return keycloak == null || keycloak.isClosed();
+    }
+
+    /*
+    Similar to
+    https://github.com/keycloak/keycloak-client/blob/0ca751f23022c9295f2e7dc9fa72725e4380f4ed/admin-client/src/main/java/org/keycloak/admin/client/JacksonProvider.java
+    but without objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL).
+    JsonInclude.Include.NON_NULL will cause errors with some unit tests
+    in ImportClientsIT.
+     */
+    public static class JacksonProvider extends ResteasyJackson2Provider {
+
+        public ObjectMapper locateMapper(Class<?> type, MediaType mediaType) {
+            ObjectMapper objectMapper = super.locateMapper(type, mediaType);
+            objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+            return objectMapper;
+        }
     }
 }

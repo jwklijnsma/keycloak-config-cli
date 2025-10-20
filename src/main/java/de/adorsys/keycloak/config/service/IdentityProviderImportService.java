@@ -30,6 +30,7 @@ import org.keycloak.representations.idm.IdentityProviderRepresentation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -39,6 +40,7 @@ import java.util.Optional;
 import static de.adorsys.keycloak.config.properties.ImportConfigProperties.ImportManagedProperties.ImportManagedPropertiesValues;
 
 @Service
+@ConditionalOnProperty(prefix = "run", name = "operation", havingValue = "IMPORT", matchIfMissing = true)
 public class IdentityProviderImportService {
     private static final Logger logger = LoggerFactory.getLogger(IdentityProviderImportService.class);
 
@@ -98,11 +100,38 @@ public class IdentityProviderImportService {
         Optional<IdentityProviderRepresentation> maybeIdentityProvider = identityProviderRepository.search(realmName, identityProviderName);
 
         if (maybeIdentityProvider.isPresent()) {
+            updateIdentityProviderFlowAliases(realmName, identityProvider);
             updateIdentityProviderIfNecessary(realmName, identityProvider);
         } else {
             logger.debug("Create identityProvider '{}' in realm '{}'", identityProviderName, realmName);
             identityProviderRepository.create(realmName, identityProvider);
         }
+    }
+
+    public void updateIdentityProviderFlowAliases(String realmName, IdentityProviderRepresentation identityProvider) {
+        IdentityProviderRepresentation existingIdp = identityProviderRepository.getByAlias(realmName, identityProvider.getAlias());
+        if (existingIdp != null) {
+            boolean updated = false;
+            if (hasFirstBrokerLoginFlowAliasChanged(existingIdp, identityProvider)) {
+                existingIdp.setFirstBrokerLoginFlowAlias(identityProvider.getFirstBrokerLoginFlowAlias());
+                updated = true;
+            }
+            if (hasPostBrokerLoginFlowAliasChanged(existingIdp, identityProvider)) {
+                existingIdp.setPostBrokerLoginFlowAlias(identityProvider.getPostBrokerLoginFlowAlias());
+                updated = true;
+            }
+            if (updated) {
+                identityProviderRepository.update(realmName, existingIdp);
+            }
+        }
+    }
+
+    private boolean hasFirstBrokerLoginFlowAliasChanged(IdentityProviderRepresentation existingIdp, IdentityProviderRepresentation identityProvider) {
+        return !Objects.equals(existingIdp.getFirstBrokerLoginFlowAlias(), identityProvider.getFirstBrokerLoginFlowAlias());
+    }
+
+    private boolean hasPostBrokerLoginFlowAliasChanged(IdentityProviderRepresentation existingIdp, IdentityProviderRepresentation identityProvider) {
+        return !Objects.equals(existingIdp.getPostBrokerLoginFlowAlias(), identityProvider.getPostBrokerLoginFlowAlias());
     }
 
     private void updateIdentityProviderIfNecessary(String realmName, IdentityProviderRepresentation identityProvider) {

@@ -495,6 +495,71 @@ class ImportUsersIT extends AbstractImportIT {
     }
 
     @Test
+    @Order(15)
+    void shouldNotUpdateUserWhenOnlyInitialPasswordChanges() throws IOException {
+        doImport("15.0_update_realm_change_clientusers_password.json");
+
+        UserRepresentation userBefore = keycloakRepository.getUser(REALM_NAME, "myinitialclientuser");
+        String modifiedAtBefore = null;
+        if (userBefore.getAttributes() != null && userBefore.getAttributes().containsKey("modifiedAt")) {
+            modifiedAtBefore = userBefore.getAttributes().get("modifiedAt").get(0);
+        }
+
+        doImport("15.1_update_realm_change_clientusers_password.json");
+
+        UserRepresentation userAfter = keycloakRepository.getUser(REALM_NAME, "myinitialclientuser");
+        String modifiedAtAfter = null;
+        if (userAfter.getAttributes() != null && userAfter.getAttributes().containsKey("modifiedAt")) {
+            modifiedAtAfter = userAfter.getAttributes().get("modifiedAt").get(0);
+        }
+
+        assertThat(modifiedAtAfter, is(modifiedAtBefore));
+
+        AccessTokenResponse token = keycloakAuthentication.login(
+                REALM_NAME,
+                "moped-client",
+                "my-special-client-secret",
+                "myinitialclientuser",
+                "initialchangedclientuser123"
+        );
+
+        assertThat(token.getToken(), notNullValue());
+    }
+
+    @Test
+    @Order(16)
+    void shouldNotTriggerUpdateUserEventForServiceAccountUserWithoutChanges() throws IOException {
+        doImport("60.1_update_realm_add_clientl_with_service_account.json");
+
+        // Re-import the same configuration to check if UPDATE USER event is not triggered
+        doImport("60.2_update_realm_add_clientl_with_service_account.json");
+
+        RealmRepresentation realm = keycloakProvider.getInstance().realm(REALM_NAME).toRepresentation();
+        assertThat(realm.getRealm(), is(REALM_NAME));
+        assertThat(realm.isEnabled(), is(true));
+        assertThat(realm.isRegistrationAllowed(), is(true));
+        assertThat(realm.isRegistrationEmailAsUsername(), is(true));
+
+        final ClientRepresentation client = keycloakRepository.getClient(REALM_NAME, "technical-client");
+        assertThat(client.getClientId(), is("technical-client"));
+
+        UserRepresentation user = keycloakProvider.getInstance().realm(REALM_NAME)
+                .clients()
+                .get(client.getId())
+                .getServiceAccountUser();
+        assertThat(user.getUsername(), is("service-account-technical-client"));
+
+        List<String> clientLevelRoles = keycloakRepository.getServiceAccountUserClientLevelRoles(
+                REALM_NAME, client.getClientId(), "moped-client");
+        assertThat(clientLevelRoles, containsInAnyOrder("test_client_role", "other_test_client_role"));
+
+        List<String> keycloakNativeClientLevelRoles = keycloakRepository.getServiceAccountUserClientLevelRoles(
+                REALM_NAME, client.getClientId(), "realm-management");
+        assertThat(keycloakNativeClientLevelRoles, contains("view-realm"));
+
+    }
+
+    @Test
     @Order(50)
     void shouldUpdateUserWithEmailAsRegistration() throws IOException {
         doImport("50.1_create_realm_with_email_as_username_without_username.json");
@@ -527,6 +592,33 @@ class ImportUsersIT extends AbstractImportIT {
         assertThat(user.getEmail(), is("otheruser@mail.de"));
         assertThat(user.getFirstName(), is("My firstname 2"));
         assertThat(user.getLastName(), is("My lastname 2"));
+    }
+    @Test
+    @Order(70)
+    void shouldUpdateUserWithNewUsername() throws IOException {
+        doImport("16.1_update_realm_change_users_username.json");
+
+        RealmRepresentation createdRealm = keycloakProvider.getInstance().realm(REALM_NAME).toRepresentation();
+
+        assertThat(createdRealm.getRealm(), is(REALM_NAME));
+        assertThat(createdRealm.isEnabled(), is(true));
+
+        UserRepresentation user = keycloakRepository.getUser(REALM_NAME, "jake");
+
+        assertThat(user.getUsername(), is("jake"));
+        assertThat(user.getEmail(), is("myuser@mail.de"));
+        assertThat(user.isEnabled(), is(true));
+        assertThat(user.getFirstName(), is("My firstname"));
+        assertThat(user.getLastName(), is("My lastname"));
+
+        doImport("16.2_update_realm_change_users_username.json");
+        UserRepresentation updatedUser= keycloakRepository.getUser(REALM_NAME, "john123");
+        assertThat(updatedUser.getUsername(), is("john123"));
+        assertThat(updatedUser.getEmail(), is("myuser@mail.de"));
+        assertThat(updatedUser.isEnabled(), is(true));
+        assertThat(updatedUser.getFirstName(), is("My firstname"));
+        assertThat(updatedUser.getLastName(), is("My lastname"));
+
     }
 
     @Test

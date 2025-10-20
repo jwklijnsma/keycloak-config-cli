@@ -23,17 +23,24 @@ package de.adorsys.keycloak.config.repository;
 import de.adorsys.keycloak.config.exception.KeycloakRepositoryException;
 import de.adorsys.keycloak.config.provider.KeycloakProvider;
 import de.adorsys.keycloak.config.util.ResponseUtil;
+import org.apache.commons.lang3.ObjectUtils;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.admin.client.resource.RealmsResource;
 import org.keycloak.representations.idm.RealmRepresentation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
+
+import java.util.HashMap;
+import java.util.List;
 
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.WebApplicationException;
 
+
 @Service
+@ConditionalOnProperty(prefix = "run", name = "operation", havingValue = "IMPORT", matchIfMissing = true)
 public class RealmRepository {
     private final KeycloakProvider keycloakProvider;
 
@@ -57,7 +64,10 @@ public class RealmRepository {
     }
 
     public RealmRepresentation get(String realmName) {
-        return getResource(realmName).toRepresentation();
+        final var realm = getResource(realmName).toRepresentation();
+        realm.setAttributes(ObjectUtils.firstNonNull(realm.getAttributes(), new HashMap<>()));
+        realm.setEventsEnabled(ObjectUtils.firstNonNull(realm.isEventsEnabled(), false));
+        return realm;
     }
 
     public void create(RealmRepresentation realm) {
@@ -105,5 +115,9 @@ public class RealmRepository {
 
     public void removeDefaultOptionalClientScope(String realmName, String scopeId) {
         getResource(realmName).removeDefaultOptionalClientScope(scopeId);
+    }
+
+    public List<RealmRepresentation> getRealms() {
+        return keycloakProvider.getInstance().realms().findAll();
     }
 }

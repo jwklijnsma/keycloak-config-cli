@@ -34,6 +34,7 @@ import org.keycloak.representations.idm.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -42,10 +43,11 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 @Service
+@ConditionalOnProperty(prefix = "run", name = "operation", havingValue = "IMPORT", matchIfMissing = true)
 public class UserImportService {
     private static final Logger logger = LoggerFactory.getLogger(UserImportService.class);
 
-    private static final String[] IGNORED_PROPERTIES_FOR_UPDATE = {"realmRoles", "clientRoles"};
+    private static final String[] IGNORED_PROPERTIES_FOR_UPDATE = {"realmRoles", "clientRoles", "serviceAccountClientId", "attributes"};
     private static final String USER_LABEL_FOR_INITIAL_CREDENTIAL = "initial";
 
     private final RealmRepository realmRepository;
@@ -127,6 +129,11 @@ public class UserImportService {
 
             Optional<UserRepresentation> maybeUser = userRepository.search(realmName, userToImport.getUsername());
 
+            if (maybeUser.isEmpty() && userToImport.getEmail() != null) {
+                maybeUser = userRepository.searchByAttributes(realmName, userToImport.getEmail(), userToImport.getFirstName(),
+                        userToImport.getLastName());
+            }
+
             if (maybeUser.isPresent()) {
                 updateUser(maybeUser.get());
             } else {
@@ -156,7 +163,7 @@ public class UserImportService {
                                 credentialRepresentation.getUserLabel(), USER_LABEL_FOR_INITIAL_CREDENTIAL
                         ))
                         .toList();
-                patchedUser.setCredentials(userCredentials);
+                patchedUser.setCredentials(userCredentials.isEmpty() ? null : userCredentials);
             }
 
             if (!CloneUtil.deepEquals(existingUser, patchedUser, "access")) {

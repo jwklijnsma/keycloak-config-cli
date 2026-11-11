@@ -849,10 +849,15 @@
                                 <exclude>**/OrganizationRepository.java</exclude>
                                 <exclude>**/RoutedOrganizationDomainRepresentation.java</exclude>
                                 <exclude>**/OrganizationDomainsResource.java</exclude>
+                                <exclude>**/OrganizationGroupImportService.java</exclude>
+                                <exclude>**/OrganizationGroupRepository.java</exclude>
+                                <exclude>**/OrganizationGroupsResource.java</exclude>
+                                <exclude>**/OrganizationGroupRepresentation.java</exclude>
                                 <exclude>**/OrganizationDomainsRepresentation.java</exclude>
                             </excludes>
                             <testExcludes>
                                 <exclude>**/OrganizationImportServiceTest.java</exclude>
+                                <exclude>**/OrganizationGroupImportServiceTest.java</exclude>
                                 <exclude>**/OrganizationRepositoryTest.java</exclude>
                                 <exclude>**/ImportOrganizationsIT.java</exclude>
                                 <exclude>**/OrganizationVersionConditionTest.java</exclude>
@@ -991,10 +996,15 @@ import org.keycloak.representations.userprofile.config.UPConfig;</token>
                                 <exclude>**/OrganizationRepository.java</exclude>
                                 <exclude>**/RoutedOrganizationDomainRepresentation.java</exclude>
                                 <exclude>**/OrganizationDomainsResource.java</exclude>
+                                <exclude>**/OrganizationGroupImportService.java</exclude>
+                                <exclude>**/OrganizationGroupRepository.java</exclude>
+                                <exclude>**/OrganizationGroupsResource.java</exclude>
+                                <exclude>**/OrganizationGroupRepresentation.java</exclude>
                                 <exclude>**/OrganizationDomainsRepresentation.java</exclude>
                             </excludes>
                             <testExcludes>
                                 <exclude>**/OrganizationImportServiceTest.java</exclude>
+                                <exclude>**/OrganizationGroupImportServiceTest.java</exclude>
                                 <exclude>**/OrganizationRepositoryTest.java</exclude>
                                 <exclude>**/ImportOrganizationsIT.java</exclude>
                                 <exclude>**/OrganizationVersionConditionTest.java</exclude>
@@ -1126,10 +1136,15 @@ import org.keycloak.representations.userprofile.config.UPConfig;</token>
                                 <exclude>**/OrganizationRepository.java</exclude>
                                 <exclude>**/RoutedOrganizationDomainRepresentation.java</exclude>
                                 <exclude>**/OrganizationDomainsResource.java</exclude>
+                                <exclude>**/OrganizationGroupImportService.java</exclude>
+                                <exclude>**/OrganizationGroupRepository.java</exclude>
+                                <exclude>**/OrganizationGroupsResource.java</exclude>
+                                <exclude>**/OrganizationGroupRepresentation.java</exclude>
                                 <exclude>**/OrganizationDomainsRepresentation.java</exclude>
                             </excludes>
                             <testExcludes>
                                 <exclude>**/OrganizationImportServiceTest.java</exclude>
+                                <exclude>**/OrganizationGroupImportServiceTest.java</exclude>
                                 <exclude>**/OrganizationRepositoryTest.java</exclude>
                                 <exclude>**/ImportOrganizationsIT.java</exclude>
                                 <exclude>**/OrganizationVersionConditionTest.java</exclude>
@@ -1247,11 +1262,16 @@ import org.keycloak.representations.userprofile.config.UPConfig;</token>
                                 <exclude>**/OrganizationRepository.java</exclude>
                                 <exclude>**/RoutedOrganizationDomainRepresentation.java</exclude>
                                 <exclude>**/OrganizationDomainsResource.java</exclude>
+                                <exclude>**/OrganizationGroupImportService.java</exclude>
+                                <exclude>**/OrganizationGroupRepository.java</exclude>
+                                <exclude>**/OrganizationGroupsResource.java</exclude>
+                                <exclude>**/OrganizationGroupRepresentation.java</exclude>
                                 <exclude>**/OrganizationDomainsRepresentation.java</exclude>
                                 <exclude>**/OrganizationImportService.java</exclude>
                             </excludes>
                             <testExcludes>
                                 <exclude>**/OrganizationImportServiceTest.java</exclude>
+                                <exclude>**/OrganizationGroupImportServiceTest.java</exclude>
                                 <exclude>**/OrganizationRepositoryTest.java</exclude>
                                 <exclude>**/ImportOrganizationsIT.java</exclude>
                                 <exclude>**/OrganizationVersionConditionTest.java</exclude>

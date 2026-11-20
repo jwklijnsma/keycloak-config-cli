@@ -7,12 +7,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased]
 
 ### Added
+- Support organization groups (Keycloak 26.6+): an organization's `groups` (with `description`, `attributes`, `members` and nested `subGroups`) are created, updated and, with `import.managed.organization=full`, deleted. Undeclared properties are kept, an organization without `groups` is left untouched, and on older Keycloak versions declared groups are skipped with a warning [#1693](https://github.com/adorsys/keycloak-config-cli/issues/1693)
 - Support signed JWT client assertions, including federated assertions from Kubernetes service accounts.
 - Add `keycloak.authorization` property to pass a pre-acquired bearer token (raw, without `Bearer ` prefix), bypassing the grant-type login flow. No token refresh is attempted, so the token must remain valid for the entire run.
 - Support for Keycloak 26.7.4 to fix [#1666](https://github.com/adorsys/keycloak-config-cli/issues/1666)
+- Support for Keycloak 26.8.1 (default version, CI matrix, normalization baselines). Workflow test fixtures use day durations because Keycloak 26.8 rejects the `y` unit.
 
 ### Fixed
-- Skip the client-level update of the system client `realm-management` (and its dependent protocol mapper and client scope updates) when Keycloak refuses it with 403, instead of failing the import; authorization settings are still imported.
+- Fix `import.managed.group=full` deleting every unmanaged group while the remote state does not track any group yet; with remote state enabled only groups tracked in the state are deleted now [#1682](https://github.com/adorsys/keycloak-config-cli/issues/1682)
+- Look groups up with Keycloak's exact name search instead of listing every group of the realm for each lookup, so group import cost scales with the import instead of the realm size [#1681](https://github.com/adorsys/keycloak-config-cli/issues/1681)
 - Route raw user-profile updates through the configured Keycloak client so proxy, TLS, timeout and authentication settings are honored [#1680](https://github.com/adorsys/keycloak-config-cli/issues/1680)
 - Omit unset request properties to avoid older servers rejecting unknown null-valued realm and user fields, while retaining null map entries needed to clear client authentication flow bindings.
 - Fix root-level workflow `restartInProgress` / `cancelInProgress` being sent under names Keycloak does not read; accept both camelCase and kebab-case input and send the canonical kebab-case keys [#1669](https://github.com/adorsys/keycloak-config-cli/issues/1669).

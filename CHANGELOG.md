@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Support signed JWT client assertions, including federated assertions from Kubernetes service accounts.
 - Add `keycloak.authorization` property to pass a pre-acquired bearer token (raw, without `Bearer ` prefix), bypassing the grant-type login flow. No token refresh is attempted, so the token must remain valid for the entire run.
 - Support for Keycloak 26.7.4 to fix [#1666](https://github.com/adorsys/keycloak-config-cli/issues/1666)
+- Support for Keycloak 26.8.1 (default version, CI matrix, normalization baselines). Workflow test fixtures use day durations because Keycloak 26.8 rejects the `y` unit.
 
 ### Fixed
 - Fix `import.managed.group=full` deleting every unmanaged group while the remote state does not track any group yet; with remote state enabled only groups tracked in the state are deleted now [#1682](https://github.com/adorsys/keycloak-config-cli/issues/1682)

@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Add `keycloak.authorization` property to pass a pre-acquired bearer token (raw, without `Bearer ` prefix), bypassing the grant-type login flow. No token refresh is attempted, so the token must remain valid for the entire run.
 - Support for Keycloak 26.7.4 to fix [#1666](https://github.com/adorsys/keycloak-config-cli/issues/1666)
 - Update Spring Boot from 3.4.5 to 3.5.16 (last OSS release of the 3.5.x line); Spring Framework is now managed by Spring Boot (6.2.19), snakeyaml by Spring Boot BOM (2.4), logback updated to 1.5.34, netty aligned to 4.1.135.Final. Note: since Spring Boot 3.5, `*.enabled` configuration properties only accept `true`/`false` values.
+- Update Spring Boot to 4.1.2 [#1731](https://github.com/adorsys/keycloak-config-cli/pull/1731)
 
 ### Security
 - Update jackson from 2.21.1 to 2.21.5 (CVE-2026-54512..54518, CVE-2026-59888, CVE-2026-59889, GHSA-r7wm-3cxj-wff9, GHSA-mhm7-754m-9p8w) [#1660](https://github.com/adorsys/keycloak-config-cli/issues/1660)

@@ -60,7 +60,7 @@ jobs:
           ./mvnw ${MAVEN_CLI_OPTS}
           -Dkeycloak.version=${{ matrix.env.KEYCLOAK_VERSION }}
           -Dkeycloak.client.version=${{ matrix.env.KEYCLOAK_CLIENT_VERSION }}
-          -Dtest='**/*IT' -Dsurefire.failIfNoSpecifiedTests=false
+          -Dtest='**/*IT,CloneUtilTest,GroupImportServiceTest,RoleImportServiceTest' -Dsurefire.failIfNoSpecifiedTests=false
           -Djacoco.skip=true -Dcheckstyle.skip -Dpmd.skip -Dspotbugs.skip
           clean verify
 

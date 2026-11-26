@@ -1,0 +1,53 @@
+# Scratch workflow for adorsys/keycloak-config-cli#1785 - not part of the PR.
+name: PR 1785 verify
+on:
+  push:
+    branches: [ci/pr-1785-verify]
+  workflow_dispatch:
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: adorsys/keycloak-config-cli
+          ref: main
+          path: main-src
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+      - name: Tests (PR branch, Keycloak 26.8.1)
+        run: |
+          set -o pipefail
+          ./mvnw -B -ntp -Dkeycloak.version=26.8.1 test \
+            -Dtest='GroupImportServiceTest,ImportGroupsIT,ImportDefaultGroupsIT,ImportManagedNoDeleteIT,ImportUsersMergeRolesAndGroupsIT,ImportManagedWithEncryptedStateIT' \
+            -Dsurefire.failIfNoSpecifiedTests=false 2>&1 | tee tests.log
+      - name: Checkstyle
+        run: ./mvnw -B -ntp checkstyle:check 2>&1 | tee checkstyle.log
+      - name: Build jars
+        run: |
+          ./mvnw -B -ntp -q -DskipTests package && cp target/keycloak-config-cli.jar pr.jar
+          (cd main-src && ./mvnw -B -ntp -q -DskipTests package) && cp main-src/target/keycloak-config-cli.jar main.jar
+      - name: Start Keycloak 26.8.1
+        run: |
+          docker run -d --name kc -p 8080:8080 -e KC_BOOTSTRAP_ADMIN_USERNAME=admin -e KC_BOOTSTRAP_ADMIN_PASSWORD=admin123 \
+            quay.io/keycloak/keycloak:26.8.1 start-dev
+          for i in $(seq 1 90); do curl -sf http://localhost:8080/realms/master >/dev/null && break; sleep 2; done
+      - name: Before / after scenario
+        run: |
+          bash .github/pr-1785/scenario.sh "main (before)" main.jar | tee scenario.log
+          bash .github/pr-1785/scenario.sh "PR #1785 (after)" pr.jar | tee -a scenario.log
+          cat scenario.log >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pr-1785-logs
+          path: |
+            tests.log
+            checkstyle.log
+            scenario.log
+            target/surefire-reports/*.txt

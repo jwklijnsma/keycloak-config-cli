@@ -5,6 +5,25 @@ on:
     branches: [ci/pr-1785-verify]
   workflow_dispatch:
 jobs:
+  bisect:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ref: [upstream-main, 24afb3b, e792c0c]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 5
+      - uses: actions/checkout@v4
+        if: matrix.ref == 'upstream-main'
+        with:
+          repository: adorsys/keycloak-config-cli
+          ref: main
+          path: main-src
+      - run: |
+          if [ "${{ matrix.ref }}" = upstream-main ]; then cd main-src; else git checkout ${{ matrix.ref }}; fi
+          ./mvnw -B -ntp -Dkeycloak.version=26.8.1 test -Dtest=ImportGroupsIT -Dsurefire.failIfNoSpecifiedTests=false 2>&1 | grep -E "Tests run:|FAIL|expected|but:|Expected|ImportGroupsIT.java" | head -80
   verify:
     runs-on: ubuntu-latest
     timeout-minutes: 45

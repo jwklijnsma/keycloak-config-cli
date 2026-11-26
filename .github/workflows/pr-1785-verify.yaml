@@ -20,13 +20,16 @@ jobs:
           distribution: temurin
           java-version: 21
           cache: maven
+      - name: Fetch Maven wrapper distribution (retry on 429)
+        run: |
+          for d in . main-src; do for i in 1 2 3 4 5; do (cd $d && ./mvnw -B -ntp -v >/dev/null) && break; sleep $((i*20)); done; done
       - name: Tests (PR branch, Keycloak 26.8.1)
         continue-on-error: true
         run: |
           set -o pipefail
           ./mvnw -B -ntp -Dkeycloak.version=26.8.1 test \
             -Dtest='GroupImportServiceTest,ImportGroupsIT,ImportDefaultGroupsIT,ImportManagedNoDeleteIT,ImportUsersMergeRolesAndGroupsIT,ImportManagedWithEncryptedStateIT' \
-            -Dsurefire.failIfNoSpecifiedTests=false 2>&1 | tee tests.log
+            -Dsurefire.failIfNoSpecifiedTests=false -Dmaven.wagon.http.retryHandler.count=5 2>&1 | tee tests.log
       - name: Checkstyle
         continue-on-error: true
         run: ./mvnw -B -ntp checkstyle:check 2>&1 | tee checkstyle.log

@@ -1,0 +1,14 @@
+===== [main (before)] #1682: managed.group=full + remote state, state holds no group yet =====
+groups before import : legacy-team-a,legacy-team-b   (created by hand, not by keycloak-config-cli)
+groups after import  : app-admins
+===== [main (before)] #1681: group import in a realm with 3000 groups =====
+groups in realm      : 3000
+import file          : 50 groups (import.managed.group=no-delete)
+import duration      : 549.4 s
+===== [PR #1785 (after)] #1682: managed.group=full + remote state, state holds no group yet =====
+groups before import : legacy-team-a,legacy-team-b   (created by hand, not by keycloak-config-cli)
+groups after import  : app-admins,legacy-team-a,legacy-team-b
+===== [PR #1785 (after)] #1681: group import in a realm with 3000 groups =====
+groups in realm      : 3050
+import file          : 50 groups (import.managed.group=no-delete)
+import duration      : 10.5 s

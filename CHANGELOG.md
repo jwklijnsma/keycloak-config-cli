@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Fixed
+- Expand `$(file:UTF-8:...)` substitutions that contain YAML list items before parsing YAML imports, so included list fragments become real list entries again; other substitutions stay scalar-based, so block scalars such as PEM keys are kept intact [#1796](https://github.com/adorsys/keycloak-config-cli/issues/1796)
+- Keep substituted values such as `[Test] Portal` as strings, and stop structured substitutions from corrupting the parsing of later documents in multi-document YAML files [#1797](https://github.com/adorsys/keycloak-config-cli/issues/1797)
+
 ## [6.6.0] - 2026-11-24
 
 ### Changed

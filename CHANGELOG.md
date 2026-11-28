@@ -12,7 +12,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Fix `import.managed.group=full` deleting every unmanaged group while the remote state does not track any group yet; with remote state enabled only groups tracked in the state are deleted now [#1682](https://github.com/adorsys/keycloak-config-cli/issues/1682)
 - Look groups up with Keycloak's exact name search instead of listing every group of the realm for each lookup, so group import cost scales with the import instead of the realm size [#1681](https://github.com/adorsys/keycloak-config-cli/issues/1681)
 - Removing keys from map properties such as group `attributes` works again; since 6.6.0 `CloneUtil.patch` merged every map, so removed keys were kept. Partial identity provider `config` updates ([#1771](https://github.com/adorsys/keycloak-config-cli/pull/1771)) keep their key-by-key merge.
-- Fix YAML variable substitution regressions: `$(file:UTF-8:...)` includes that contain a YAML list are expanded (with correct indentation) before parsing, substituted text starting with `[` stays a string when it is not valid YAML, and structured substitutions no longer corrupt the parser in files with several YAML documents [#1796](https://github.com/adorsys/keycloak-config-cli/issues/1796) [#1797](https://github.com/adorsys/keycloak-config-cli/issues/1797)
+- Expand `$(file:UTF-8:...)` substitutions that contain YAML list items before parsing YAML imports, so included list fragments become real list entries again; other substitutions stay scalar-based, so block scalars such as PEM keys are kept intact [#1796](https://github.com/adorsys/keycloak-config-cli/issues/1796)
+- Keep substituted values such as `[Test] Portal` as strings, and stop structured substitutions from corrupting the parsing of later documents in multi-document YAML files [#1797](https://github.com/adorsys/keycloak-config-cli/issues/1797)
 
 ## [6.6.0] - 2026-11-24
 

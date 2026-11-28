@@ -1,0 +1,83 @@
+# Scratch workflow for adorsys/keycloak-config-cli#1788, #1789, #1798 - not part of any PR.
+name: Verify PRs 1788 1789 1798
+on:
+  push:
+    branches: [ci/verify-prs]
+  workflow_dispatch:
+env:
+  MAVEN_CLI_OPTS: '-ntp --batch-mode --errors --fail-at-end -Dmaven.wagon.http.retryHandler.count=5'
+  TESTCONTAINERS_RYUK_DISABLED: 'true'
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: pr1798-build
+            ref: ci/verify-1798
+            kc: 26.8.1
+            kcc: 26.0.13
+            args: clean verify -Pcoverage
+          - name: pr1798-its
+            ref: ci/verify-1798
+            kc: 26.8.1
+            kcc: 26.0.13
+            args: -Dtest='KeycloakImportProviderIT,KeycloakImportProvider*IT' -Dsurefire.failIfNoSpecifiedTests=false -Djacoco.skip=true clean test
+          - name: pr1788-build
+            ref: fix/realm-management-client-403
+            kc: 26.8.1
+            kcc: 26.0.13
+            args: clean verify -Pcoverage
+          - name: pr1788-its-26.8.1
+            ref: fix/realm-management-client-403
+            kc: 26.8.1
+            kcc: 26.0.13
+            args: -Dtest='ImportRolesIT*,ImportClientsIT,ImportAuthorizationFgapV2CompatibilityIT,ImportClientScopesIT,ImportFineGrainedPermissionsIT*,ImportProtocolMappersIT' -Dsurefire.failIfNoSpecifiedTests=false -Djacoco.skip=true clean test
+          - name: pr1788-its-26.7.4
+            ref: fix/realm-management-client-403
+            kc: 26.7.4
+            kcc: 26.0.13
+            args: -Dtest='ImportRolesIT*,ImportClientsIT,ImportAuthorizationFgapV2CompatibilityIT' -Dsurefire.failIfNoSpecifiedTests=false -Djacoco.skip=true clean test
+          - name: pr1789-build
+            ref: ci/integration-tests-workflow
+            kc: 26.8.1
+            kcc: 26.0.13
+            args: clean verify -Pcoverage
+          - name: combined-all-its
+            ref: ci/verify-combined
+            kc: 26.8.1
+            kcc: 26.0.13
+            args: -Dtest='**/*IT' -Dsurefire.failIfNoSpecifiedTests=false -Djacoco.skip=true -Dcheckstyle.skip -Dpmd.skip -Dspotbugs.skip clean verify
+    name: ${{ matrix.name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.ref }}
+          fetch-depth: 0
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+      - name: Maven wrapper (retry)
+        run: for i in 1 2 3 4 5; do ./mvnw -B -ntp -v >/dev/null && break; sleep $((i*20)); done
+      - name: Pull Keycloak
+        run: docker pull quay.io/keycloak/keycloak:${{ matrix.kc }}
+      - name: Run
+        run: |
+          set -o pipefail
+          ./mvnw ${MAVEN_CLI_OPTS} -Dkeycloak.version=${{ matrix.kc }} -Dkeycloak.client.version=${{ matrix.kcc }} ${{ matrix.args }} 2>&1 | tee run.log
+      - name: Summary
+        if: always()
+        run: |
+          grep -E 'Tests run:|<<< (FAILURE|ERROR)|BUILD|\[ERROR\]' run.log | sed 's/\x1b\[[0-9;]*m//g' | tail -80 > summary.txt || true
+          { echo '```'; cat summary.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: logs-${{ matrix.name }}
+          path: |
+            run.log
+            target/surefire-reports/*.txt

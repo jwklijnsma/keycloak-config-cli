@@ -1,0 +1,87 @@
+# Scratch workflow for adorsys/keycloak-config-cli#1788, #1789, #1798 - not part of any PR.
+name: Verify 1788 1789 1798
+on:
+  push:
+    branches: [ci/verify-1788-1789-1798]
+  workflow_dispatch:
+env:
+  MAVEN_CLI_OPTS: '-ntp --batch-mode --errors --fail-at-end --show-version -Dmaven.wagon.http.retryHandler.count=5'
+  TESTCONTAINERS_RYUK_DISABLED: 'true'
+permissions:
+  contents: read
+jobs:
+  pr-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        ref:
+          - name: '1788'
+            branch: fix/realm-management-client-403
+            its: 'ImportRolesIT*,ImportClientsIT,ImportAuthorizationFgapV2CompatibilityIT,ImportRealmManagementIT*'
+          - name: '1789'
+            branch: ci/integration-tests-workflow
+            its: 'NONE'
+          - name: '1798'
+            branch: fix/yaml-substitution-1796-1797-rebased
+            its: 'KeycloakImportProvider*IT'
+        kc:
+          - version: 26.8.1
+            client: 26.0.13
+            profile: ''
+            extra: ''
+          - version: 21.1.2
+            client: 21.1.2
+            profile: '-Ppre-keycloak22'
+            extra: '-Dresteasy.version=4.7.7.Final'
+    name: ${{ matrix.ref.name }} build (${{ matrix.kc.version }})
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.ref.branch }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+      - name: Fetch Maven wrapper (retry)
+        run: for i in 1 2 3 4 5; do ./mvnw -B -ntp -v >/dev/null && break; sleep $((i*20)); done
+      - name: CI build & unit tests (same command as ci.yaml)
+        run: ./mvnw ${MAVEN_CLI_OPTS} -Dkeycloak.version=${{ matrix.kc.version }} -Dkeycloak.client.version=${{ matrix.kc.client }} ${{ matrix.kc.extra }} clean verify -Pcoverage ${{ matrix.kc.profile }}
+      - name: Touched ITs
+        if: matrix.ref.its != 'NONE' && matrix.kc.version == '26.8.1'
+        run: >-
+          ./mvnw ${MAVEN_CLI_OPTS} -Dkeycloak.version=${{ matrix.kc.version }} -Dkeycloak.client.version=${{ matrix.kc.client }}
+          -Dtest='${{ matrix.ref.its }}' -Dsurefire.failIfNoSpecifiedTests=false
+          -Djacoco.skip=true -Dcheckstyle.skip -Dpmd.skip -Dspotbugs.skip test
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: reports-${{ matrix.ref.name }}-${{ matrix.kc.version }}
+          path: target/surefire-reports/*.txt
+
+  all-its-combined:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    name: all ITs on main + 1785 + 1788 + clone-util + it-fixes + 1798 (26.8.1)
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+      - name: Fetch Maven wrapper (retry)
+        run: for i in 1 2 3 4 5; do ./mvnw -B -ntp -v >/dev/null && break; sleep $((i*20)); done
+      - run: docker pull quay.io/keycloak/keycloak:26.8.1
+      - name: All ITs
+        run: >-
+          ./mvnw ${MAVEN_CLI_OPTS} -Dkeycloak.version=26.8.1 -Dkeycloak.client.version=26.0.13
+          -Dtest='**/*IT' -Dsurefire.failIfNoSpecifiedTests=false
+          -Djacoco.skip=true -Dcheckstyle.skip -Dpmd.skip -Dspotbugs.skip clean verify
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: reports-combined
+          path: target/surefire-reports/*.txt

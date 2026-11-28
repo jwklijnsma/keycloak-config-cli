@@ -73,9 +73,7 @@ public class KeycloakImportProvider {
 
     // File lookups may intentionally provide YAML structure (for example, list items).
     // Expand these before parsing YAML; other substitutions remain scalar-based.
-    private static final Pattern YAML_FILE_PATTERN = Pattern.compile(
-            "\\$\\(file:UTF-8:(?:[^()]|\\([^()]*\\))*\\)"
-    );
+    private static final Pattern YAML_FILE_PATTERN = Pattern.compile("\\$\\(file:UTF-8:(?:[^()]|\\([^()]*\\))*\\)");
 
     private static final Logger logger = LoggerFactory.getLogger(KeycloakImportProvider.class);
 
@@ -226,37 +224,42 @@ public class KeycloakImportProvider {
         }
 
         Matcher matcher = YAML_FILE_PATTERN.matcher(content);
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         while (matcher.find()) {
             String replacement = interpolator.replace(matcher.group());
             // Only inline YAML list fragments. Expanding arbitrary file values here
             // would break block scalars (for example PEM keys) whose indentation is
             // significant and must be handled after YAML parsing.
             if (replacement.stripLeading().startsWith("- ")) {
-                // The placeholder is usually indented as a YAML sequence item. The first
-                // line inherits that indentation from the original document, but subsequent
-                // lines from the included file need the same prefix or YAML sees them at
-                // column zero and rejects the sequence.
-                int lineStart = content.lastIndexOf('\n', matcher.start() - 1) + 1;
-                String indentation = content.substring(lineStart, matcher.start());
-                if (indentation.chars().allMatch(Character::isWhitespace)) {
-                    String[] lines = replacement.split("\\n", -1);
-                    StringBuilder indented = new StringBuilder(lines[0]);
-                    for (int i = 1; i < lines.length; i++) {
-                        indented.append('\n');
-                        if (!lines[i].isEmpty()) {
-                            indented.append(indentation).append(lines[i]);
-                        }
-                    }
-                    replacement = indented.toString();
-                }
-                matcher.appendReplacement(result, Matcher.quoteReplacement(replacement));
+                replacement = indentContinuationLines(replacement, content, matcher.start());
             } else {
-                matcher.appendReplacement(result, Matcher.quoteReplacement(matcher.group()));
+                replacement = matcher.group();
             }
+            matcher.appendReplacement(result, Matcher.quoteReplacement(replacement));
         }
         matcher.appendTail(result);
         return result.toString();
+    }
+
+    // The first line of an included fragment inherits the placeholder's indentation from the
+    // document; the following lines need the same prefix, or YAML sees them at column zero and
+    // rejects the sequence.
+    private static String indentContinuationLines(String fragment, String content, int placeholderStart) {
+        int lineStart = content.lastIndexOf('\n', placeholderStart - 1) + 1;
+        String indentation = content.substring(lineStart, placeholderStart);
+        if (!indentation.chars().allMatch(Character::isWhitespace)) {
+            return fragment;
+        }
+
+        String[] lines = fragment.split("\\R", -1);
+        StringBuilder indented = new StringBuilder(lines[0]);
+        for (int i = 1; i < lines.length; i++) {
+            indented.append('\n');
+            if (!lines[i].isEmpty()) {
+                indented.append(indentation).append(lines[i]);
+            }
+        }
+        return indented.toString();
     }
 
     private boolean isYamlResource(ImportResource resource) {

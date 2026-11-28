@@ -12,6 +12,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Removing keys from map properties such as group `attributes` works again; since 6.6.0 `CloneUtil.patch` merged every map, so removed keys were kept. Partial identity provider `config` updates ([#1771](https://github.com/adorsys/keycloak-config-cli/pull/1771)) keep their key-by-key merge.
 - Skip the client-level update of the system client `realm-management` (and its dependent protocol mapper and client scope updates) when Keycloak refuses it with 403, instead of failing the import; authorization settings are still imported.
 - Skip updates of the built-in roles of `realm-management` when Keycloak 26.8+ refuses them with 403, instead of failing the import.
+- Expand `$(file:UTF-8:...)` substitutions that contain YAML list items before parsing YAML imports, so included list fragments become real list entries again; other substitutions stay scalar-based, so block scalars such as PEM keys are kept intact [#1796](https://github.com/adorsys/keycloak-config-cli/issues/1796)
+- Keep substituted values such as `[Test] Portal` as strings, and stop structured substitutions from corrupting the parsing of later documents in multi-document YAML files [#1797](https://github.com/adorsys/keycloak-config-cli/issues/1797)
 
 ## [6.6.0] - 2026-11-24
 

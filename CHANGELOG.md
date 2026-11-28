@@ -10,6 +10,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Fix `import.managed.group=full` deleting every unmanaged group while the remote state does not track any group yet; with remote state enabled only groups tracked in the state are deleted now [#1682](https://github.com/adorsys/keycloak-config-cli/issues/1682)
 - Look groups up with Keycloak's exact name search instead of listing every group of the realm for each lookup, so group import cost scales with the import instead of the realm size [#1681](https://github.com/adorsys/keycloak-config-cli/issues/1681)
 - Removing keys from map properties such as group `attributes` works again; since 6.6.0 `CloneUtil.patch` merged every map, so removed keys were kept. Partial identity provider `config` updates ([#1771](https://github.com/adorsys/keycloak-config-cli/pull/1771)) keep their key-by-key merge.
+- Skip the client-level update of the system client `realm-management` (and its dependent protocol mapper and client scope updates) when Keycloak refuses it with 403, instead of failing the import; authorization settings are still imported.
+- Skip updates of the built-in roles of `realm-management` when Keycloak 26.8+ refuses them with 403, instead of failing the import.
 
 ## [6.6.0] - 2026-11-24
 

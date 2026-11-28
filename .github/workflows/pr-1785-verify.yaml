@@ -45,11 +45,6 @@ jobs:
             kc: 26.8.1
             kcc: 26.0.13
             args: clean verify -Pcoverage
-          - name: combined-all-its
-            ref: ci/verify-combined
-            kc: 26.8.1
-            kcc: 26.0.13
-            args: -Dtest='**/*IT' -Dsurefire.failIfNoSpecifiedTests=false -Djacoco.skip=true -Dcheckstyle.skip -Dpmd.skip -Dspotbugs.skip clean verify
     name: ${{ matrix.name }}
     steps:
       - uses: actions/checkout@v4
